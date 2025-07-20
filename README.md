@@ -2,6 +2,7 @@
 
 This project sets up a barebones Arch Linux media server with:
 - Plex (media streaming)
+- Overseerr (media requests)
 - Sonarr, Radarr, Bazarr (media management)
 - SABnzbd + NZBHydra2 (Usenet)
 - Jackett + FlareSolverr (torrent proxy)

@@ -22,7 +22,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=America/New_York
+      - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /home/michael/.docker/appdata/sabnzbd:/config
@@ -38,7 +38,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=America/New_York
+      - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /home/michael/.docker/appdata/radarr:/config
@@ -54,7 +54,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=America/New_York
+      - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /home/michael/.docker/appdata/sonarr:/config
@@ -70,7 +70,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=America/New_York
+      - TZ=${TZ}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /home/michael/.docker/appdata:/bazarr:/config
@@ -87,7 +87,7 @@ services:
       - LOG_HTML=false  # (optional: disable HTML logging)
       - CAPTCHA_SOLVER=2captcha
       - CAPTCHA_SOLVER_2CAPTCHA_API_KEY=${CAPTCHA_SOLVER_2CAPTCHA_API_KEY}
-      - TZ=America/New_York
+      - TZ=${TZ}
     ports:
       - "0.0.0.0:8191:8191"  # Default FlareSolverr port
     restart: unless-stopped
@@ -98,7 +98,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=America/New_York
+      - TZ=${TZ}
       - AUTO_UPDATE=true #optional
       - FlareSolverrUrl=http://${SERVER_IP}:8191
     volumes:
@@ -114,7 +114,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=America/New_York
+      - TZ=${TZ}
     volumes:
       - /home/michael/.docker/appdata/nzbhydra2:/config
       - /mnt/media/data/torrents:/downloads
@@ -122,16 +122,18 @@ services:
       - 0.0.0.0:5076:5076
     restart: unless-stopped
 
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+  overseerr:
+    image: sctx/overseerr:latest
+    container_name: overseerr
     environment:
       - LOG_LEVEL=debug
-      - TZ=America/New_York
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
     ports:
-      - 0.0.0.0:5056:5055
+      - 0.0.0.0:5055:5055
     volumes:
-      - /home/michael/.docker/appdata/jellyseerr:/app/config
+      - /home/michael/.docker/appdata/overseerr:/app/config
     restart: unless-stopped
 
   gluetun:
@@ -152,7 +154,7 @@ services:
     volumes:
       - /home/michael/.docker/appdata/gluetun:/gluetun
     environment:
-      - TZ=America/New_York
+      - TZ=${TZ}
       - VPN_SERVICE_PROVIDER=protonvpn
       - OPENVPN_USER=${OPENVPN_USER}
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
@@ -169,7 +171,7 @@ services:
       - "/dev/dri:/dev/dri"
     environment:
       - TempPathHost=/mnt/media/data/cache/transcodes
-      - TZ=America/New_York
+      - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
