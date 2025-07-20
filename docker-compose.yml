@@ -1,0 +1,181 @@
+services:
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=latest
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    volumes:
+      - ~/.docker/appdata/plex:/config
+      - /mnt/media/data/media/movies:/movies
+      - /mnt/media/data/media/tv:/shows
+      - /mnt/media/data/media/music:/music
+    restart: unless-stopped
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=America/New_York
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/michael/.docker/appdata/sabnzbd:/config
+      - /mnt/media/data/usenet:/data/usenet:rw
+    restart: unless-stopped
+    depends_on:
+      - gluetun
+    network_mode: "service:gluetun"
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=America/New_York
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/michael/.docker/appdata/radarr:/config
+      - /mnt/media/data:/data
+      - /mnt/media/data/torrents:/downloads
+    ports:
+      - 0.0.0.0:7878:7878
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=America/New_York
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/michael/.docker/appdata/sonarr:/config
+      - /mnt/media/data:/data
+      - /mnt/media/data/torrents:/downloads 
+    ports:
+      - 0.0.0.0:8989:8989
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=America/New_York
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/michael/.docker/appdata:/bazarr:/config
+      - /mnt/media/data/media:/data/media
+    ports:
+      - 0.0.0.0:6767:6767
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info  # (optional: debug, info, warning, error)
+      - LOG_HTML=false  # (optional: disable HTML logging)
+      - CAPTCHA_SOLVER=2captcha
+      - CAPTCHA_SOLVER_2CAPTCHA_API_KEY=${CAPTCHA_SOLVER_2CAPTCHA_API_KEY}
+      - TZ=America/New_York
+    ports:
+      - "0.0.0.0:8191:8191"  # Default FlareSolverr port
+    restart: unless-stopped
+
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=America/New_York
+      - AUTO_UPDATE=true #optional
+      - FlareSolverrUrl=http://${SERVER_IP}:8191
+    volumes:
+      - /home/michael/.docker/appdata/jackett:/config
+      - /mnt/media/data/torrents:/downloads
+    ports:
+      - 0.0.0.0:9117:9117
+    restart: unless-stopped
+
+  nzbhydra2:
+    image: lscr.io/linuxserver/nzbhydra2:latest
+    container_name: nzbhydra2
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=America/New_York
+    volumes:
+      - /home/michael/.docker/appdata/nzbhydra2:/config
+      - /mnt/media/data/torrents:/downloads
+    ports:
+      - 0.0.0.0:5076:5076
+    restart: unless-stopped
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=America/New_York
+    ports:
+      - 0.0.0.0:5056:5055
+    volumes:
+      - /home/michael/.docker/appdata/jellyseerr:/app/config
+    restart: unless-stopped
+
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 0.0.0.0:8888:8888/tcp # HTTP proxy
+      - 0.0.0.0:8388:8388/tcp # Shadowsocks
+      - 0.0.0.0:8388:8388/udp # Shadowsocks
+      - 0.0.0.0:8080:8080 #sabnzbd
+      - 0.0.0.0:9091:9091 #qbittorrent
+      - "0.0.0.0:51413:51413"
+      - "0.0.0.0:51413:51413/udp"
+    volumes:
+      - /home/michael/.docker/appdata/gluetun:/gluetun
+    environment:
+      - TZ=America/New_York
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_COUNTRIES=United States
+    restart: unless-stopped
+
+  fileflows:
+    container_name: fileflows
+    image: revenz/fileflows
+    restart: unless-stopped
+    ports:
+      - "19200:5000"
+    devices:
+      - "/dev/dri:/dev/dri"
+    environment:
+      - TempPathHost=/mnt/media/data/cache/transcodes
+      - TZ=America/New_York
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /mnt/media/data/cache/transcodes:/temp
+      - /home/michael/.docker/appdata/fileflows/data:/app/Data
+      - /home/michael/.docker/appdata/fileflows/logs:/app/Logs
+      - /home/michael/.docker/appdata/fileflows/common:/app/common
+      - /mnt/media/data/media:/media
